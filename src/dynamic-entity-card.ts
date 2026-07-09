@@ -11,6 +11,17 @@ export class DynamicEntityCard extends LitElement {
   private pickerOpen = false;
   private searchText = "";
     
+  private handleSearch(e: Event) {
+    this.searchText = (e.target as HTMLInputElement).value;
+    this.requestUpdate();
+  }
+
+  private loadSelection() {
+    this.selectedEntity = localStorage.getItem(
+      "dynamic-entity-card:selected"
+    ) || undefined;
+  }
+    
   static styles = css`
     ha-card {
       padding: 16px;
@@ -22,6 +33,11 @@ export class DynamicEntityCard extends LitElement {
     this.config = config;
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+    this.loadSelection();
+  }
+    
   set hass(hass: any) {
     this._hass = hass;
   }
@@ -44,16 +60,32 @@ render() {
         .replace(" Breaker", "")
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
-
+  
+  const filteredBreakers = breakers.filter(item =>
+    item.name.toLowerCase().includes(this.searchText.toLowerCase())
+  );
+    
   if (this.pickerOpen) {
     return html`
       <ha-card>
         <h3>Select Circuit</h3>
 
-        ${breakers.map(item => html`
+        <input
+            placeholder="Search circuits..."
+            .value=${this.searchText}
+            @input=${this.handleSearch}
+        />
+
+        ${filteredBreakers.map(item => html`
           <div
             @click=${() => {
               this.selectedEntity = item.entity;
+              
+              localStorage.setItem(
+                "dynamic-entity-card:selected",
+              item.entity
+              );
+
               this.pickerOpen = false;
               this.requestUpdate();
             }}
@@ -77,6 +109,7 @@ render() {
         <h3>${name}</h3>
         <button @click=${() => {
           this.pickerOpen = true;
+          this.searchText = "";
           this.requestUpdate();
         }}>
           Change Circuit
@@ -89,6 +122,7 @@ render() {
     <ha-card>
       <button @click=${() => {
         this.pickerOpen = true;
+        this.searchText = "";   
         this.requestUpdate();
       }}>
         Select Circuit
