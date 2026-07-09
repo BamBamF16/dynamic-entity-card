@@ -16,12 +16,13 @@ export class DynamicEntityCard extends LitElement {
     this.requestUpdate();
   }
 
+  private previousPickerOpen = false;
   private loadSelection() {
     this.selectedEntity = localStorage.getItem(
       "dynamic-entity-card:selected"
     ) || undefined;
   }
-    
+
   static styles = css`
     ha-card {
       padding: 16px;
@@ -37,7 +38,16 @@ export class DynamicEntityCard extends LitElement {
     super.connectedCallback();
     this.loadSelection();
   }
-    
+
+  updated() {
+    if (this.pickerOpen && !this.previousPickerOpen) {
+      const input = this.shadowRoot?.querySelector("input");
+      setTimeout(() => input?.focus(), 0);
+    }
+
+    this.previousPickerOpen = this.pickerOpen;
+  }
+
   set hass(hass: any) {
     this._hass = hass;
   }
@@ -60,11 +70,11 @@ render() {
         .replace(" Breaker", "")
     }))
     .sort((a, b) => a.name.localeCompare(b.name));
-  
+
   const filteredBreakers = breakers.filter(item =>
     item.name.toLowerCase().includes(this.searchText.toLowerCase())
   );
-    
+
   if (this.pickerOpen) {
     return html`
       <ha-card>
@@ -80,7 +90,7 @@ render() {
           <div
             @click=${() => {
               this.selectedEntity = item.entity;
-              
+
               localStorage.setItem(
                 "dynamic-entity-card:selected",
               item.entity
@@ -122,7 +132,7 @@ render() {
     <ha-card>
       <button @click=${() => {
         this.pickerOpen = true;
-        this.searchText = "";   
+        this.searchText = "";
         this.requestUpdate();
       }}>
         Select Circuit
