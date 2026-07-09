@@ -4,7 +4,7 @@
   "description": "A Home Assistant dynamic card that auto-populates a list of entities and allows for selection.  Once selected a user selected card is displayed based on the selected entity.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "vite build"
   },
   "repository": {
     "type": "git",
@@ -13,9 +13,16 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/BamBamF16/dynamic-entity-card/issues"
   },
-  "homepage": "https://github.com/BamBamF16/dynamic-entity-card#readme"
+  "homepage": "https://github.com/BamBamF16/dynamic-entity-card#readme",
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.1.4"
+  },
+  "dependencies": {
+    "lit": "^3.3.3"
+  }
 }
