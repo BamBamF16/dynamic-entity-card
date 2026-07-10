@@ -4,7 +4,9 @@
   "description": "A Home Assistant dynamic card that auto-populates a list of entities and allows for selection.  Once selected a user selected card is displayed based on the selected entity.",
   "main": "index.js",
   "scripts": {
-    "build": "vite build"
+    "build": "vite build",
+    "deploy": "cat dist/dynamic-entity-card.js | ssh -p 10222 jeff.ssh@ha.bambamfam.com \"sudo tee /config/www/custom_cards/dynamic-entity-card.js > /dev/null\"",
+    "build-deploy": "npm run build && npm run deploy"
   },
   "repository": {
     "type": "git",
@@ -23,6 +25,7 @@
     "vite": "^8.1.4"
   },
   "dependencies": {
+    "custom-card-helpers": "^2.0.0",
     "lit": "^3.3.3"
   }
 }
