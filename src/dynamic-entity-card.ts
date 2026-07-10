@@ -22,28 +22,30 @@ export class DynamicEntityCard extends LitElement {
   }
 
   private cleanEntityName(name: string): string {
-    const original = name;
     let cleaned = name;
+    let lastGood = name;
+console.log("CLEAN NAME INPUT:", name);
+    const applyPatterns = (patterns: string[] | undefined) => {
+      if (!patterns) return;
 
-    for (const pattern of this.config.name_prefix_regex || []) {
-      try {
-        cleaned = cleaned.replace(new RegExp(pattern), "");
-      } catch {
-        // Ignore invalid regex patterns
+      for (const pattern of patterns) {
+        try {
+          const next = cleaned.replace(new RegExp(pattern), "").trim();
+
+          if (next) {
+            cleaned = next;
+            lastGood = next;
+          }
+        } catch {
+          // Ignore invalid regex patterns
+        }
       }
-    }
+    };
 
-    for (const pattern of this.config.name_suffix_regex || []) {
-      try {
-        cleaned = cleaned.replace(new RegExp(pattern), "");
-      } catch {
-        // Ignore invalid regex patterns
-      }
-    }
-
-    cleaned = cleaned.trim();
-
-    return cleaned || original;
+    applyPatterns(this.config.name_prefix_regex);
+    applyPatterns(this.config.name_suffix_regex);
+console.log("CLEAN NAME OUTPUT:", lastGood);
+    return lastGood;
   }
 
   private previousPickerOpen = false;
