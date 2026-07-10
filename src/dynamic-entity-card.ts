@@ -76,7 +76,8 @@ export class DynamicEntityCard extends LitElement {
       entity_label: "Entity",
       show_entity_id: false,
       entity_domain: undefined,
-      entity_prefix: undefined,
+      entity_include_regex: [],
+      entity_exclude_regex: [],
       name_cleanup_regex: [],
       vertical: false,
       show_icon: true,
@@ -215,8 +216,18 @@ export class DynamicEntityCard extends LitElement {
         }
 
         if (
-          this.config.entity_prefix &&
-          !entity.startsWith(this.config.entity_prefix)
+          this.config.entity_include_regex.length &&
+          !this.config.entity_include_regex.some((pattern: string) =>
+            new RegExp(pattern).test(entity)
+          )
+        ) {
+          return false;
+        }
+
+        if (
+          this.config.entity_exclude_regex.some((pattern: string) =>
+            new RegExp(pattern).test(entity)
+          )
         ) {
           return false;
         }
