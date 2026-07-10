@@ -25,25 +25,18 @@ export class DynamicEntityCard extends LitElement {
     let cleaned = name;
     let lastGood = name;
 
-    const applyPatterns = (patterns: string[] | undefined) => {
-      if (!patterns) return;
+    for (const pattern of this.config.name_cleanup_regex || []) {
+      try {
+        const next = cleaned.replace(new RegExp(pattern), "").trim();
 
-      for (const pattern of patterns) {
-        try {
-          const next = cleaned.replace(new RegExp(pattern), "").trim();
-
-          if (next) {
-            cleaned = next;
-            lastGood = next;
-          }
-        } catch {
-          // Ignore invalid regex patterns
+        if (next) {
+          cleaned = next;
+          lastGood = next;
         }
+      } catch {
+        // Ignore invalid regex patterns
       }
-    };
-
-    applyPatterns(this.config.name_prefix_regex);
-    applyPatterns(this.config.name_suffix_regex);
+    }
 
     return lastGood;
   }
@@ -135,8 +128,7 @@ export class DynamicEntityCard extends LitElement {
       show_entity_id: false,
       entity_domain: undefined,
       entity_prefix: undefined,
-      name_prefix_regex: [],
-      name_suffix_regex: [],
+      name_cleanup_regex: [],
       vertical: false,
       show_icon: true,
       show_state: true,
