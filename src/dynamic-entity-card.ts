@@ -24,7 +24,7 @@ export class DynamicEntityCard extends LitElement {
   private cleanEntityName(name: string): string {
     let cleaned = name;
     let lastGood = name;
-console.log("CLEAN NAME INPUT:", name);
+
     const applyPatterns = (patterns: string[] | undefined) => {
       if (!patterns) return;
 
@@ -44,7 +44,7 @@ console.log("CLEAN NAME INPUT:", name);
 
     applyPatterns(this.config.name_prefix_regex);
     applyPatterns(this.config.name_suffix_regex);
-console.log("CLEAN NAME OUTPUT:", lastGood);
+
     return lastGood;
   }
 
