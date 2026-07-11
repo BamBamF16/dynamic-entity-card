@@ -6,7 +6,6 @@ import { LovelaceCard } from "custom-card-helpers";
 export class DynamicEntityCard extends LitElement {
   private config: any;
   private _hass: any;
-  private cardElement?: HTMLElement;
 
   private selectedEntity?: string;
   private selectedName = "";
@@ -166,6 +165,16 @@ export class DynamicEntityCard extends LitElement {
     this.requestUpdate();
   }
 
+  private matchesRegex(value: string, patterns: string[]): boolean {
+    return patterns.some((pattern) => {
+      try {
+        return new RegExp(pattern).test(value);
+      } catch {
+        return false;
+      }
+    });
+  }
+
   private async createTileCard() {
     const helpers = await (window as any).loadCardHelpers();
 
@@ -179,10 +188,10 @@ export class DynamicEntityCard extends LitElement {
       features_position: this.config.features_position,
       features: this.config.show_toggle
         ? [
-            {
-              type: "toggle",
-            },
-          ]
+          {
+            type: "toggle",
+          },
+        ]
         : [],
     });
 
@@ -199,11 +208,7 @@ export class DynamicEntityCard extends LitElement {
     this.previousPickerOpen = this.pickerOpen;
   }
 
-  render() {
-    if (!this._hass) {
-      return html`Loading...`;
-    }
-
+  private getEntities() {
     const entities = Object.keys(this._hass.states)
       .filter((entity) => {
         const domain = entity.split(".")[0];
@@ -217,17 +222,13 @@ export class DynamicEntityCard extends LitElement {
 
         if (
           this.config.entity_include_regex.length &&
-          !this.config.entity_include_regex.some((pattern: string) =>
-            new RegExp(pattern).test(entity)
-          )
+          !this.matchesRegex(entity, this.config.entity_include_regex)
         ) {
           return false;
         }
 
         if (
-          this.config.entity_exclude_regex.some((pattern: string) =>
-            new RegExp(pattern).test(entity)
-          )
+          this.matchesRegex(entity, this.config.entity_exclude_regex)
         ) {
           return false;
         }
@@ -241,10 +242,23 @@ export class DynamicEntityCard extends LitElement {
         ),
       }))
       .sort((a, b) => a.name.localeCompare(b.name));
+    return entities;
+  }
 
+  private getFilteredEntities(entities: any[]) {
     const filteredEntities = entities.filter((item) =>
       item.name.toLowerCase().includes(this.searchText.toLowerCase())
     );
+    return filteredEntities;
+  }
+
+  render() {
+    if (!this._hass) {
+      return html`Loading...`;
+    }
+
+    const entities = this.getEntities();
+    const filteredEntities = this.getFilteredEntities(entities);
 
     if (this.pickerOpen) {
       return html`
@@ -316,8 +330,7 @@ export class DynamicEntityCard extends LitElement {
     if (this.selectedEntity) {
       const stateObj = this._hass.states[this.selectedEntity];
 
-      const name =
-        this._hass.states[this.selectedEntity]?.attributes.friendly_name;
+      const name = this._hass.states[this.selectedEntity]?.attributes.friendly_name;
 
       this.selectedName = name
         ? this.cleanEntityName(name)
