@@ -115,14 +115,12 @@ export class DynamicEntityCard extends LitElement {
       name_cleanup_regex: [],
       child_card: {
         type: "tile",
+        vertical: false,
         features: [],
         features_position: "bottom",
       },
-      vertical: false,
       show_icon: true,
       show_state: true,
-      features_position: "bottom",
-      show_toggle: true,
       ...config,
     };
   }
@@ -222,7 +220,7 @@ export class DynamicEntityCard extends LitElement {
       type: this.config.child_card?.type || "tile",
       entity: this.selectedEntity!,
       name: this.selectedName,
-      vertical: this.config.vertical,
+      vertical: this.config.child_card.vertical,
       icon: this.config.show_icon ? undefined : "",
       hide_state: !this.config.show_state,
       features_position: this.config.child_card.features_position,
