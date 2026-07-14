@@ -18,6 +18,8 @@ export class DynamicEntityCard extends LitElement {
   static styles = css`
     ha-card.wrapper {
       padding: 0px;
+      position: relative;
+      overflow: hidden;
     }
 
     .card-title {
@@ -65,6 +67,31 @@ export class DynamicEntityCard extends LitElement {
       font-size: 0.8rem;
       color: var(--secondary-text-color);
     }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      overflow: auto;
+    }
+
+    .picker-panel {
+      background: var(--card-background-color);
+      width: calc(100% - 16px);
+      margin-top: 8px;
+      border-radius: 12px;
+      overflow: auto;
+      max-height: 90%;
+    }
+
+    .card-container {
+      position: relative;
+    }
+  
   `;
 
   setConfig(config: any) {
@@ -260,108 +287,41 @@ export class DynamicEntityCard extends LitElement {
     const entities = this.getEntities();
     const filteredEntities = this.getFilteredEntities(entities);
 
-    if (this.pickerOpen) {
-      return html`
-        <ha-card
-          class="wrapper"
-          id="dynamic-card"
-          style="--dynamic-title-align: ${this.config.title_position};"
-        >
-          ${this.config.title
-            ? html`<h3 class="card-title">${this.config.title}</h3>`
-            : ""}
-
-          <h3 class="picker-title">
-            Select ${this.config.entity_label}
-          </h3>
-
-          <input
-            class="search-input"
-            placeholder="Search ${this.config.entity_label.toLowerCase()}s..."
-            .value=${this.searchText}
-            @input=${this.handleSearch}
-          />
-
-          ${filteredEntities.map(
-            (item) => html`
-              <div
-                class="entity-row"
-                @click=${() => {
-                  this.selectedEntity = item.entity;
-                  this.createTileCard();
-
-                  const key = this.getStorageKey();
-
-                  if (key) {
-                    localStorage.setItem(key, item.entity);
-                  }
-
-                  this.pickerOpen = false;
-                  this.requestUpdate();
-
-                  setTimeout(() => {
-                    this.shadowRoot
-                      ?.querySelector("#dynamic-card")
-                      ?.scrollIntoView({
-                        behavior: "smooth",
-                        block: "center",
-                      });
-                  }, 100);
-                }}
-              >
-                <div class="entity-name">
-                  ${item.name}
-                </div>
-
-                ${this.config.show_entity_id
-                  ? html`
-                      <div class="entity-id">
-                        - ${item.entity}
-                      </div>
-                    `
-                  : ""}
-              </div>
-            `
-          )}
-        </ha-card>
-      `;
-    }
-
     if (this.selectedEntity) {
       const stateObj = this._hass.states[this.selectedEntity];
-
       const name = this._hass.states[this.selectedEntity]?.attributes.friendly_name;
 
       this.selectedName = name
         ? this.cleanEntityName(name)
         : "";
 
-      return html`
-        <ha-card
-          class="wrapper"
-          id="dynamic-card"
-          style="--dynamic-title-align: ${this.config.title_position};"
-        >
-          ${this.config.title
-            ? html`
-                <h3 class="card-title">${this.config.title}</h3>
-              `
-            : ""}
-
-          ${this.tileCard}
-
-          <button
-            class="change-button"
-            @click=${() => {
-              this.pickerOpen = true;
-              this.searchText = "";
-              this.requestUpdate();
-            }}
+        return html`
+          <ha-card
+            class="wrapper"
+            id="dynamic-card"
+            style="--dynamic-title-align: ${this.config.title_position};"
           >
-            Change ${this.config.entity_label}
-          </button>
-        </ha-card>
-      `;
+          
+            ${this.config.title? html`<h3 class="card-title">${this.config.title}</h3>`: ""}
+
+            ${this.tileCard}
+
+            <button
+              class="change-button"
+              @click=${() => {
+                this.pickerOpen = true;
+                this.searchText = "";
+                this.requestUpdate();
+              }}
+            >
+              Change ${this.config.entity_label}
+            </button>
+
+          </ha-card>
+
+          ${this.pickerOpen ? this.renderPickerOverlay(entities) : ""}
+
+        `;
     }
 
     return html`
@@ -389,4 +349,67 @@ export class DynamicEntityCard extends LitElement {
       </ha-card>
     `;
   }
+
+  private renderPicker(entities: any[]) {
+    const filteredEntities = this.getFilteredEntities(entities);
+
+    return html`
+      <h3 class="picker-title">
+        Select ${this.config.entity_label}
+      </h3>
+
+      <input
+        class="search-input"
+        placeholder="Search ${this.config.entity_label.toLowerCase()}s..."
+        .value=${this.searchText}
+        @input=${this.handleSearch}
+      />
+
+      ${filteredEntities.map(
+        (item) => html`
+          <div
+            class="entity-row"
+            @click=${() => {
+              this.selectedEntity = item.entity;
+              this.createTileCard();
+
+              const key = this.getStorageKey();
+
+              if (key) {
+                localStorage.setItem(key, item.entity);
+              }
+
+              this.pickerOpen = false;
+              this.requestUpdate();
+            }}
+          >
+            <div class="entity-name">
+              ${item.name}
+            </div>
+
+            ${this.config.show_entity_id
+              ? html`
+                  <div class="entity-id">
+                    - ${item.entity}
+                  </div>
+                `
+              : ""}
+          </div>
+        `
+      )}
+    `;
+  }
+
+  private renderPickerOverlay(entities: any[]) {
+    return html`
+      <div class="overlay" @click=${() => {
+        this.pickerOpen = false;
+      }}>
+        <div class="picker-panel" @click=${(e: Event) => e.stopPropagation()}>
+          ${this.renderPicker(entities)}
+        </div>
+      </div>
+    `;
+  }
+  
 }
