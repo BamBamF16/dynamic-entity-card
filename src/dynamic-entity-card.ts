@@ -16,10 +16,20 @@ export class DynamicEntityCard extends LitElement {
   private tileCard?: LovelaceCard;
 
   static styles = css`
+    
+    :host {
+      position: relative;
+      display: block;
+    }
+
+    .card-container {
+      position: relative;
+    }
+
     ha-card.wrapper {
       padding: 0px;
       position: relative;
-      overflow: hidden;
+      overflow: visible;
     }
 
     .card-title {
@@ -70,13 +80,15 @@ export class DynamicEntityCard extends LitElement {
 
     .overlay {
       position: absolute;
-      inset: 0;
+      top: 40px;
+      left: 0;
+      right: 0;
       background: rgba(0,0,0,0.3);
       z-index: 100;
       display: flex;
       justify-content: center;
       align-items: flex-start;
-      overflow: auto;
+      overflow: visible;
     }
 
     .picker-panel {
@@ -86,10 +98,6 @@ export class DynamicEntityCard extends LitElement {
       border-radius: 12px;
       overflow: auto;
       max-height: 90%;
-    }
-
-    .card-container {
-      position: relative;
     }
   
   `;
@@ -295,7 +303,8 @@ export class DynamicEntityCard extends LitElement {
         ? this.cleanEntityName(name)
         : "";
 
-        return html`
+    return html`
+      <div class="card-container">
           <ha-card
             class="wrapper"
             id="dynamic-card"
@@ -321,7 +330,8 @@ export class DynamicEntityCard extends LitElement {
 
           ${this.pickerOpen ? this.renderPickerOverlay(entities) : ""}
 
-        `;
+        </div>
+      `;
     }
 
     return html`
