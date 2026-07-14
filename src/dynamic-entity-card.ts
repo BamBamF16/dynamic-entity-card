@@ -113,6 +113,9 @@ export class DynamicEntityCard extends LitElement {
       entity_include_regex: [],
       entity_exclude_regex: [],
       name_cleanup_regex: [],
+      child_card: {
+        type: "tile",
+      },
       vertical: false,
       show_icon: true,
       show_state: true,
