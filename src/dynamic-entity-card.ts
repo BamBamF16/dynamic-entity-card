@@ -225,7 +225,7 @@ export class DynamicEntityCard extends LitElement {
       vertical: this.config.vertical,
       icon: this.config.show_icon ? undefined : "",
       hide_state: !this.config.show_state,
-      features_position: this.config.features_position,
+      features_position: this.config.child_card.features_position,
       features: this.config.child_card.features || [],
     };
 
