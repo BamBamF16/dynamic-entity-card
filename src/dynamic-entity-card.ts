@@ -115,6 +115,8 @@ export class DynamicEntityCard extends LitElement {
       name_cleanup_regex: [],
       child_card: {
         type: "tile",
+        features: [],
+        features_position: "bottom",
       },
       vertical: false,
       show_icon: true,
@@ -224,13 +226,7 @@ export class DynamicEntityCard extends LitElement {
       icon: this.config.show_icon ? undefined : "",
       hide_state: !this.config.show_state,
       features_position: this.config.features_position,
-      features: this.config.show_toggle
-        ? [ 
-            {
-              type: "toggle",
-            },
-          ]
-        : [],
+      features: this.config.child_card.features || [],
     };
 
     this.tileCard = await helpers.createCardElement(cardConfig);
