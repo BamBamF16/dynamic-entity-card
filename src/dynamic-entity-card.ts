@@ -13,7 +13,7 @@ export class DynamicEntityCard extends LitElement {
   private previousPickerOpen = false;
   private searchText = "";
 
-  private tileCard?: LovelaceCard;
+  private childCard?: LovelaceCard;
 
   static styles = css`
     
@@ -137,14 +137,14 @@ export class DynamicEntityCard extends LitElement {
   }
 
   protected async firstUpdated() {
-    await this.createTileCard();
+    await this.createChildCard();
   }
 
   set hass(hass: any) {
     this._hass = hass;
 
-    if (this.tileCard) {
-      this.tileCard.hass = hass;
+    if (this.childCard) {
+      this.childCard.hass = hass;
     }
   }
 
@@ -180,7 +180,7 @@ export class DynamicEntityCard extends LitElement {
     this.selectedEntity = localStorage.getItem(key) || undefined;
 
     if (this.selectedEntity) {
-      this.createTileCard();
+      this.createChildCard();
     }
   }
 
@@ -219,23 +219,18 @@ export class DynamicEntityCard extends LitElement {
     });
   }
 
-  private async createTileCard() {
+  private async createChildCard() {
     const helpers = await (window as any).loadCardHelpers();
 
     const cardConfig = {
-      type: this.config.child_card?.type || "tile",
+      ...this.config.child_card,
       entity: this.selectedEntity!,
       name: this.selectedName,
-      vertical: this.config.child_card.vertical,
-      icon: this.config.child_card.show_icon ? undefined : "",
-      hide_state: !this.config.child_card.show_state,
-      features_position: this.config.child_card.features_position,
-      features: this.config.child_card.features || [],
     };
 
-    this.tileCard = await helpers.createCardElement(cardConfig);
+    this.childCard = await helpers.createCardElement(cardConfig);
 
-    this.tileCard!.hass = this._hass!;
+    this.childCard!.hass = this._hass!;
     this.requestUpdate();
   }
 
@@ -318,7 +313,7 @@ export class DynamicEntityCard extends LitElement {
           
             ${this.config.title? html`<h3 class="card-title">${this.config.title}</h3>`: ""}
 
-            ${this.tileCard}
+            ${this.childCard}
 
             <button
               class="change-button"
@@ -386,7 +381,7 @@ export class DynamicEntityCard extends LitElement {
             class="entity-row"
             @click=${() => {
               this.selectedEntity = item.entity;
-              this.createTileCard();
+              this.createChildCard();
 
               const key = this.getStorageKey();
 
