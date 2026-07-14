@@ -108,6 +108,7 @@ export class DynamicEntityCard extends LitElement {
       title_position: "left",
       storage_key: undefined,
       entity_label: "Entity",
+
       show_entity_id: false,
       entity_domain: undefined,
       entity_include_regex: [],
@@ -122,6 +123,14 @@ export class DynamicEntityCard extends LitElement {
         features_position: "bottom",
       },
       ...config,
+
+      picker: {
+        domain: undefined,
+        include_regex: [],
+        exclude_regex: [],
+        show_entity_id: false,
+        ...config.picker,
+      },
     };
   }
 
@@ -248,21 +257,21 @@ export class DynamicEntityCard extends LitElement {
         const domain = entity.split(".")[0];
 
         if (
-          this.config.entity_domain &&
-          domain !== this.config.entity_domain
+          this.config.picker.domain &&
+          domain !== this.config.picker.domain
         ) {
           return false;
         }
 
         if (
-          this.config.entity_include_regex.length &&
-          !this.matchesRegex(entity, this.config.entity_include_regex)
+          this.config.picker.include_regex.length &&
+          !this.matchesRegex(entity, this.config.picker.include_regex)
         ) {
           return false;
         }
 
         if (
-          this.matchesRegex(entity, this.config.entity_exclude_regex)
+          this.matchesRegex(entity, this.config.picker.exclude_regex)
         ) {
           return false;
         }
@@ -396,7 +405,7 @@ export class DynamicEntityCard extends LitElement {
               ${item.name}
             </div>
 
-            ${this.config.show_entity_id
+            ${this.config.picker.show_entity_id
               ? html`
                   <div class="entity-id">
                     - ${item.entity}
