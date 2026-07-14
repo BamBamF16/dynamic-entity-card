@@ -216,8 +216,8 @@ export class DynamicEntityCard extends LitElement {
   private async createTileCard() {
     const helpers = await (window as any).loadCardHelpers();
 
-    this.tileCard = await helpers.createCardElement({
-      type: "tile",
+    const cardConfig = {
+      type: this.config.child_card?.type || "tile",
       entity: this.selectedEntity!,
       name: this.selectedName,
       vertical: this.config.vertical,
@@ -225,13 +225,15 @@ export class DynamicEntityCard extends LitElement {
       hide_state: !this.config.show_state,
       features_position: this.config.features_position,
       features: this.config.show_toggle
-        ? [
-          {
-            type: "toggle",
-          },
-        ]
+        ? [ 
+            {
+              type: "toggle",
+            },
+          ]
         : [],
-    });
+    };
+
+    this.tileCard = await helpers.createCardElement(cardConfig);
 
     this.tileCard!.hass = this._hass!;
     this.requestUpdate();
