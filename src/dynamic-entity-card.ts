@@ -108,20 +108,7 @@ export class DynamicEntityCard extends LitElement {
       title_position: "left",
       storage_key: undefined,
       entity_label: "Entity",
-
-      show_entity_id: false,
-      entity_domain: undefined,
-      entity_include_regex: [],
-      entity_exclude_regex: [],
       name_cleanup_regex: [],
-      child_card: {
-        type: "tile",
-        vertical: false,
-        show_icon: true,
-        show_state: true,
-        features: [],
-        features_position: "bottom",
-      },
       ...config,
 
       picker: {
@@ -130,6 +117,16 @@ export class DynamicEntityCard extends LitElement {
         exclude_regex: [],
         show_entity_id: false,
         ...config.picker,
+      },
+
+      child_card: {
+        type: "tile",
+        vertical: false,
+        show_icon: true,
+        show_state: true,
+        features: [],
+        features_position: "bottom",
+        ...config.child_card
       },
     };
   }
