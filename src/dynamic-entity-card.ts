@@ -121,11 +121,6 @@ export class DynamicEntityCard extends LitElement {
 
       child_card: {
         type: "tile",
-        vertical: false,
-        show_icon: true,
-        show_state: true,
-        features: [],
-        features_position: "bottom",
         ...config.child_card
       },
     };
