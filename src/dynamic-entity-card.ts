@@ -1,6 +1,7 @@
 import { LitElement, html, css } from "lit";
 import { customElement } from "lit/decorators.js";
 import { LovelaceCard } from "custom-card-helpers";
+import "./dynamic-entity-card-editor";
 
 @customElement("dynamic-entity-card")
 export class DynamicEntityCard extends LitElement {
@@ -14,6 +15,102 @@ export class DynamicEntityCard extends LitElement {
   private searchText = "";
 
   private childCard?: LovelaceCard;
+
+  static getConfigForm() {
+    return {
+      schema: [
+        {
+          name: "title",
+          selector: {
+            text: {},
+          },
+        },
+        {
+          name: "entity_label",
+          selector: {
+            text: {},
+          },
+        },
+        {
+          name: "title_position",
+          selector: {
+            select: {
+              options: [
+                {
+                  value: "left",
+                  label: "Left",
+                },
+                {
+                  value: "center",
+                  label: "Center",
+                },
+                {
+                  value: "right",
+                  label: "Right",
+                },
+              ],
+              mode: "radio",
+            },
+          },
+        },
+        {
+          name: "name_cleanup_regex",
+          selector: {
+            object: {},
+          },
+        },
+        {
+          type: "expandable",
+          name: "picker",
+          title: "Entity Picker",
+          schema: [
+            {
+              name: "domain",
+              selector: {
+                text: {},
+              },
+            },
+            {
+              name: "include_regex",
+              selector: {
+                object: {},
+              },
+            },
+            {
+              name: "exclude_regex",
+              selector: {
+                object: {},
+              },
+            },
+            {
+              name: "show_entity_id",
+              selector: {
+                boolean: {},
+              },
+            },
+          ],
+        },
+      ],
+      computeLabel: (schema: any) => {
+        switch (schema.name) {
+          case "name_cleanup_regex":
+            return "Name Cleanup Regex";
+          case "include_regex":
+            return "Include Regex";
+          case "exclude_regex":
+            return "Exclude Regex";
+          case "entity_label":
+            return "Entity Label"
+          case "show_entity_id":
+            return "Show Entity ID"
+          case "title_position":
+            return "Title Position";
+          default:
+            return undefined;
+        }
+      },
+    };
+  }
 
   static styles = css`
     
@@ -103,6 +200,7 @@ export class DynamicEntityCard extends LitElement {
   `;
 
   setConfig(config: any) {
+    
     this.config = {
       title: "",
       title_position: "left",
@@ -418,3 +516,16 @@ export class DynamicEntityCard extends LitElement {
   }
   
 }
+
+declare global {
+  interface Window {
+    customCards: any[];
+  }
+}
+
+window.customCards = window.customCards || [];
+window.customCards.push({
+  type: "dynamic-entity-card",
+  name: "Dynamic Entity",
+  preview: false,
+});
