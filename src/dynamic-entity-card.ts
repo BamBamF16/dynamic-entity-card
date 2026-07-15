@@ -90,6 +90,19 @@ export class DynamicEntityCard extends LitElement {
             },
           ],
         },
+        {
+          type: "expandable",
+          name: "child_card",
+          title: "Child Card",
+          schema: [
+            {
+              name: "type",
+              selector: {
+                text: {},
+              },
+            },
+          ],
+        },
       ],
       computeLabel: (schema: any) => {
         switch (schema.name) {
