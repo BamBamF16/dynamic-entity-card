@@ -26,12 +26,6 @@ export class DynamicEntityCard extends LitElement {
           },
         },
         {
-          name: "entity_label",
-          selector: {
-            text: {},
-          },
-        },
-        {
           name: "title_position",
           selector: {
             select: {
@@ -53,6 +47,12 @@ export class DynamicEntityCard extends LitElement {
             },
           },
         },
+        {
+          name: "entity_label",
+          selector: {
+            text: {},
+          },
+        },        
         {
           name: "name_cleanup_regex",
           selector: {
@@ -105,6 +105,20 @@ export class DynamicEntityCard extends LitElement {
             return "Show Entity ID"
           case "title_position":
             return "Title Position";
+          default:
+            return undefined;
+        }
+      },
+      computeHelper: (schema: any) => {
+        switch (schema.name) {
+          case "entity_label":
+            return "Label for entities used throughout card.";
+          case "name_cleanup_regex":
+            return "Applied in order to clean up displayed entity names.";
+          case "include_regex":
+            return "Only entities matching these regex patterns are listed in the picker list.";
+          case "exclude_regex":
+            return "Entities matching these regex patterns are removed from the picker list.";
           default:
             return undefined;
         }
