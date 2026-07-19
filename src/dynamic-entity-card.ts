@@ -16,125 +16,21 @@ export class DynamicEntityCard extends LitElement {
 
   private childCard?: LovelaceCard;
 
-  static getConfigForm() {
+  static getConfigElement() {
+    return document.createElement("dynamic-entity-card-editor");
+  }
+
+  static getStubConfig() {
     return {
-      schema: [
-        {
-          name: "title",
-          selector: {
-            text: {},
-          },
-        },
-        {
-          name: "title_position",
-          selector: {
-            select: {
-              options: [
-                {
-                  value: "left",
-                  label: "Left",
-                },
-                {
-                  value: "center",
-                  label: "Center",
-                },
-                {
-                  value: "right",
-                  label: "Right",
-                },
-              ],
-              mode: "radio",
-            },
-          },
-        },
-        {
-          name: "entity_label",
-          selector: {
-            text: {},
-          },
-        },        
-        {
-          name: "name_cleanup_regex",
-          selector: {
-            object: {},
-          },
-        },
-        {
-          type: "expandable",
-          name: "picker",
-          title: "Entity Picker",
-          schema: [
-            {
-              name: "domain",
-              selector: {
-                text: {},
-              },
-            },
-            {
-              name: "include_regex",
-              selector: {
-                object: {},
-              },
-            },
-            {
-              name: "exclude_regex",
-              selector: {
-                object: {},
-              },
-            },
-            {
-              name: "show_entity_id",
-              selector: {
-                boolean: {},
-              },
-            },
-          ],
-        },
-        {
-          type: "expandable",
-          name: "child_card",
-          title: "Child Card",
-          schema: [
-            {
-              name: "type",
-              selector: {
-                text: {},
-              },
-            },
-          ],
-        },
-      ],
-      computeLabel: (schema: any) => {
-        switch (schema.name) {
-          case "name_cleanup_regex":
-            return "Name Cleanup Regex";
-          case "include_regex":
-            return "Include Regex";
-          case "exclude_regex":
-            return "Exclude Regex";
-          case "entity_label":
-            return "Entity Label"
-          case "show_entity_id":
-            return "Show Entity ID"
-          case "title_position":
-            return "Title Position";
-          default:
-            return undefined;
-        }
+      title: "My Dynamic Card",
+      entity_label: "Entity",
+      title_position: "left",
+      picker: {
+        domain: "",
+        show_entity_id: false,
       },
-      computeHelper: (schema: any) => {
-        switch (schema.name) {
-          case "entity_label":
-            return "Label for entities used throughout card.";
-          case "name_cleanup_regex":
-            return "Applied in order to clean up displayed entity names.";
-          case "include_regex":
-            return "Only entities matching these regex patterns are listed in the picker list.";
-          case "exclude_regex":
-            return "Entities matching these regex patterns are removed from the picker list.";
-          default:
-            return undefined;
-        }
+      child_card: {
+        type: "tile",
       },
     };
   }
