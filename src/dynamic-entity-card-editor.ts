@@ -40,6 +40,13 @@ export class DynamicEntityCardEditor extends LitElement {
   @state() private _reservedKeyWarning = false;
   private _reservedKeyWarningTimeout?: number;
 
+  // A real entity of the picker's domain, fed into the nested editor's
+  // .value so the native editor (e.g. tile card) can correctly determine
+  // which features (toggle, etc.) are compatible - it needs an actual
+  // state object to check against, not just a domain string. Cached once
+  // per edit session so it doesn't shift around mid-edit.
+  @state() private _childCardPlaceholderEntity?: string;
+
   setConfig(config: any) {
     this.config = config || {};
   }
@@ -69,13 +76,15 @@ export class DynamicEntityCardEditor extends LitElement {
       <div class="child-card-section">
         <span class="child-card-label">Child Card:</span>
 
-        <select
-          .value=${this.config.child_card?.type || "tile"}
-          @change=${this._childTypeChanged}
-        >
-          ${CHILD_CARD_TYPES.map(
-            (t) => html`<option value=${t.value}>${t.label}</option>`
-          )}
+        <select @change=${this._childTypeChanged}>
+          ${CHILD_CARD_TYPES.map((t) => {
+            const currentType = this.config.child_card?.type || "tile";
+            return html`
+              <option value=${t.value} ?selected=${t.value === currentType}>
+                ${t.label}
+              </option>
+            `;
+          })}
         </select>
 
         <ha-icon-button
@@ -105,9 +114,10 @@ export class DynamicEntityCardEditor extends LitElement {
       </div>
 
       <ha-alert alert-type="info">
-        Entity and Name are set automatically from your ${this.config
-          .entity_label || "Entity"} selection above and can't be edited
-        here.
+        A sample entity from your ${this.config.entity_label || "Entity"}
+        picker is shown here so feature compatibility can be determined
+        correctly - the real selected entity is substituted automatically
+        when the card is used. Entity and Name can't be edited here.
       </ha-alert>
 
       ${this._reservedKeyWarning
@@ -123,7 +133,12 @@ export class DynamicEntityCardEditor extends LitElement {
         ? html`
             <hui-card-element-editor
               .hass=${this.hass}
-              .value=${this._stripReservedKeys(this.config.child_card)}
+              .value=${{
+                ...this._stripReservedKeys(this.config.child_card),
+                ...(this._childCardPlaceholderEntity
+                  ? { entity: this._childCardPlaceholderEntity }
+                  : {}),
+              }}
               .showVisibilityTab=${false}
               @config-changed=${this._childCardConfigChanged}
             ></hui-card-element-editor>
@@ -203,15 +218,109 @@ export class DynamicEntityCardEditor extends LitElement {
   }
 
   private _openChildEditor() {
+    this._childCardPlaceholderEntity = this._getPlaceholderEntity();
     this._editingChildCard = true;
   }
 
   private _closeChildEditor() {
     this._editingChildCard = false;
+    this._childCardPlaceholderEntity = undefined;
     this._reservedKeyWarning = false;
     if (this._reservedKeyWarningTimeout) {
       window.clearTimeout(this._reservedKeyWarningTimeout);
     }
+  }
+
+  // Finds a real entity to hand the nested card editor for feature
+  // compatibility checks. Prefers whatever entity is currently stored for
+  // this card (same localStorage key the running card uses), since that's
+  // the actual entity someone will see day to day. Falls back to the first
+  // entity that matches the picker's domain/include/exclude filters.
+  // Never saved - only used to drive the live editor.
+  private _getPlaceholderEntity(): string | undefined {
+    if (!this.hass) {
+      return undefined;
+    }
+
+    const matching = this._getMatchingEntities();
+
+    const storedEntity = this._getStoredEntity();
+    if (storedEntity && matching.includes(storedEntity)) {
+      return storedEntity;
+    }
+
+    return matching[0];
+  }
+
+  // Mirrors the storage key logic in dynamic-entity-card.ts, so we can look
+  // up the same localStorage entry the running card reads from.
+  private _getStorageKey(): string | undefined {
+    if (this.config?.storage_key) {
+      return `dynamic-entity-card:${this.config.storage_key}`;
+    }
+
+    if (this.config?.title) {
+      const normalized = this.config.title
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-_]/g, "");
+
+      return `dynamic-entity-card:${normalized}`;
+    }
+
+    return undefined;
+  }
+
+  private _getStoredEntity(): string | undefined {
+    const key = this._getStorageKey();
+    if (!key) {
+      return undefined;
+    }
+
+    try {
+      return localStorage.getItem(key) || undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  // Mirrors the entity filtering logic in dynamic-entity-card.ts's
+  // getEntities() - domain match, include_regex, exclude_regex.
+  private _getMatchingEntities(): string[] {
+    if (!this.hass) {
+      return [];
+    }
+
+    const domain = this.config?.picker?.domain;
+    const includeRegex = this.config?.picker?.include_regex || [];
+    const excludeRegex = this.config?.picker?.exclude_regex || [];
+
+    return Object.keys(this.hass.states).filter((entityId) => {
+      if (domain && entityId.split(".")[0] !== domain) {
+        return false;
+      }
+
+      if (includeRegex.length && !this._matchesRegex(entityId, includeRegex)) {
+        return false;
+      }
+
+      if (this._matchesRegex(entityId, excludeRegex)) {
+        return false;
+      }
+
+      return true;
+    });
+  }
+
+  private _matchesRegex(value: string, patterns: string[]): boolean {
+    return patterns.some((pattern: string) => {
+      try {
+        return new RegExp(pattern).test(value);
+      } catch {
+        return false;
+      }
+    });
   }
 
   // entity and name are owned by the parent card (they come from whichever
@@ -259,10 +368,16 @@ export class DynamicEntityCardEditor extends LitElement {
   private _childCardConfigChanged(ev: CustomEvent) {
     ev.stopPropagation();
 
-    // Since we always feed the nested editor a value with no entity/name,
-    // any non-empty entity or name on the way back out means the user just
-    // interacted with one of those fields - flash the warning.
-    if (ev.detail.config?.entity || ev.detail.config?.name) {
+    // We always feed the nested editor a placeholder entity (for feature
+    // compatibility) and no name. So: entity differing from the placeholder,
+    // or any non-empty name, means the user just interacted with one of
+    // those fields - flash the warning.
+    const attemptedEntityChange =
+      ev.detail.config?.entity &&
+      ev.detail.config.entity !== this._childCardPlaceholderEntity;
+    const attemptedNameChange = !!ev.detail.config?.name;
+
+    if (attemptedEntityChange || attemptedNameChange) {
       this._flashReservedKeyWarning();
     }
 
