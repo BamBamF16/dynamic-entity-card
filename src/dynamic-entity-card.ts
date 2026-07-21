@@ -123,7 +123,6 @@ export class DynamicEntityCard extends LitElement {
   `;
 
   setConfig(config: any) {
-    
     this.config = {
       title: "",
       title_position: "left",
@@ -243,7 +242,7 @@ export class DynamicEntityCard extends LitElement {
       entity: this.selectedEntity!,
       name: this.selectedName,
     };
-
+    
     this.childCard = await helpers.createCardElement(cardConfig);
 
     this.childCard!.hass = this._hass!;
@@ -259,7 +258,15 @@ export class DynamicEntityCard extends LitElement {
     this.previousPickerOpen = this.pickerOpen;
   }
 
+  private normalizeRegex(value: any): string[] {
+    if (Array.isArray(value)) return value;
+    return [];
+  }
+
   private getEntities() {
+    const includeRegex = this.normalizeRegex(this.config.picker.include_regex);
+    const excludeRegex = this.normalizeRegex(this.config.picker.exclude_regex);
+
     const entities = Object.keys(this._hass.states)
       .filter((entity) => {
         const domain = entity.split(".")[0];
@@ -272,14 +279,14 @@ export class DynamicEntityCard extends LitElement {
         }
 
         if (
-          this.config.picker.include_regex.length &&
-          !this.matchesRegex(entity, this.config.picker.include_regex)
+          includeRegex.length &&
+          !this.matchesRegex(entity, includeRegex)
         ) {
           return false;
         }
 
         if (
-          this.matchesRegex(entity, this.config.picker.exclude_regex)
+          this.matchesRegex(entity, excludeRegex)
         ) {
           return false;
         }
@@ -307,7 +314,7 @@ export class DynamicEntityCard extends LitElement {
     if (!this._hass) {
       return html`Loading...`;
     }
-
+    
     const entities = this.getEntities();
     const filteredEntities = this.getFilteredEntities(entities);
 
@@ -373,6 +380,9 @@ export class DynamicEntityCard extends LitElement {
           Select ${this.config.entity_label}
         </button>
       </ha-card>
+
+       ${this.pickerOpen ? this.renderPickerOverlay(entities) : ""}
+
     `;
   }
 

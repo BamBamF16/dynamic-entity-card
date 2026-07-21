@@ -24,6 +24,7 @@ const CHILD_CARD_TYPES = [
   { value: "sensor", label: "Sensor" },
   { value: "thermostat", label: "Thermostat" },
   { value: "media-control", label: "Media Control" },
+  { value: "custom:mushroom-climate-card", label: "Mushroom Thermostat" },
 ];
 
 @customElement("dynamic-entity-card-editor")
@@ -381,9 +382,18 @@ export class DynamicEntityCardEditor extends LitElement {
       this._flashReservedKeyWarning();
     }
 
+    // hui-card-element-editor strips the "custom:" prefix internally to
+    // resolve the actual registered element tag, and appears to echo back
+    // that bare type rather than the original "custom:"-prefixed value we
+    // gave it. We already own the authoritative type via our own dropdown
+    // (_childTypeChanged), so always keep that instead of whatever type
+    // comes back from the nested editor.
     this.config = {
       ...this.config,
-      child_card: this._stripReservedKeys(ev.detail.config),
+      child_card: {
+        ...this._stripReservedKeys(ev.detail.config),
+        type: this.config.child_card?.type,
+      },
     };
 
     this.dispatchEvent(new CustomEvent("config-changed", {
